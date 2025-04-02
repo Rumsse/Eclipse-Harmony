@@ -9,6 +9,7 @@ public class EnemyMovement : MonoBehaviour
 
     void Start()
     {
+        player = GameObject.FindWithTag("Player").transform;
         agent.SetDestination(player.position);
         InvokeRepeating("UpdateTarget", 0.5f, 0.5f);
     }
