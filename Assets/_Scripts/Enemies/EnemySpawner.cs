@@ -11,7 +11,7 @@ public class EnemySpawner : MonoBehaviour
     public Transform player;
 
     [SerializeField] private int poolSize = 20;
-    [SerializeField] private float spawnRadius = 3f; // Dystans od gracza
+    [SerializeField] private float spawnRadius = 1.5f; //dystans od gracza
 
     private void Awake()
     {
@@ -20,12 +20,16 @@ public class EnemySpawner : MonoBehaviour
 
     private void Start()
     {
+        Vector3 safeSpawn = GetSpawnPosition();
+
         for (int i = 0; i < poolSize; i++)
         {
             GameObject enemy = Instantiate(enemyPrefab);
             enemy.SetActive(false);
             enemyPool.Enqueue(enemy);
         }
+
+        InvokeRepeating(nameof(SpawnEnemy), 1f, 1f);
     }
 
     public void SpawnEnemy()
@@ -33,8 +37,16 @@ public class EnemySpawner : MonoBehaviour
         if (enemyPool.Count > 0)
         {
             GameObject enemy = enemyPool.Dequeue();
+            Vector3 spawnPosition = GetSpawnPosition(); 
+
             enemy.SetActive(true);
-            enemy.transform.position = GetSpawnPosition(); // Spawn wokó³ gracza
+            enemy.transform.position = spawnPosition;
+
+            NavMeshAgent agent = enemy.GetComponent<NavMeshAgent>();
+            if (agent != null)
+            {
+                agent.Warp(spawnPosition); //warp ustawia agent na pozycji na NavMesh
+            }
         }
     }
 
@@ -46,8 +58,23 @@ public class EnemySpawner : MonoBehaviour
 
     private Vector3 GetSpawnPosition()
     {
-        Vector2 randomCircle = Random.insideUnitCircle.normalized * spawnRadius;
-        return new Vector3(player.position.x + randomCircle.x, player.position.y, player.position.z + randomCircle.y);
+        for (int i = 0; i < 10; i++) //szuka 10 razy miejsca
+        {
+            Vector2 randomCircle = Random.insideUnitCircle.normalized * spawnRadius;
+            Vector3 randomPosition = new Vector3(
+                player.position.x + randomCircle.x,
+                player.position.y,
+                player.position.z + randomCircle.y
+            );
+
+            if (NavMesh.SamplePosition(randomPosition, out NavMeshHit hit, 2f, NavMesh.AllAreas))
+            {
+                return hit.position;
+            }
+        }
+
+        return player.position;
     }
+
 }
 
