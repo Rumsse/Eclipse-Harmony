@@ -14,9 +14,9 @@ GameObject:
   - component: {fileID: 2821080972038541452}
   - component: {fileID: 4340118210853159329}
   - component: {fileID: 385174721263888009}
-  - component: {fileID: 2318882890356824158}
+  - component: {fileID: -2348913716993327754}
   m_Layer: 7
-  m_Name: enemy (1)
+  m_Name: enemy red
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -160,7 +160,7 @@ NavMeshAgent:
   m_BaseOffset: 0.5
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!114 &2318882890356824158
+--- !u!114 &-2348913716993327754
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -169,8 +169,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1951245427996338679}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b50aac06b1f4d124490d0db0b90bd44b, type: 3}
+  m_Script: {fileID: 11500000, guid: 2db3d2a552096014dbfa46b2256d0b8e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  stats: {fileID: 11400000, guid: 1e2da6bae933063428da5a0266963abe, type: 2}
   agent: {fileID: 385174721263888009}
-  player: {fileID: 0}
+  target: {fileID: 0}
+  targetTag: Player1
