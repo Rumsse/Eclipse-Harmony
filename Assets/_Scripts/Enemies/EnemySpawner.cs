@@ -31,7 +31,7 @@ public class EnemySpawner : MonoBehaviour
     private int currentWaveIndex = 0;
     private bool waveInProgress = false;
     private float spawnTimer = 0f;
-    [SerializeField] private float waveTime = 5f;
+    [SerializeField] private float timeBetweenWaves = 5f;
 
     [Header("---Pooling---")]
     private Dictionary<string, Queue<GameObject>> enemyPools = new Dictionary<string, Queue<GameObject>>();
@@ -45,6 +45,10 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private Enemy enemyScript;
     public static EnemySpawner Instance;
 
+
+
+
+
     private void Awake()
     {
         Instance = this;
@@ -52,63 +56,65 @@ public class EnemySpawner : MonoBehaviour
 
     private void Start()
     {
-        // Tworzymy pule dla ka¿dego unikalnego prefab-u
-        foreach (var wave in waves)
-        {
-            foreach (var group in wave.enemyGroups)
-            {
-                string key = group.enemyName;
-
-                if (!enemyPools.ContainsKey(key))
-                {
-                    Queue<GameObject> newPool = new Queue<GameObject>();
-
-                    for (int i = 0; i < poolSize; i++)
-                    {
-                        GameObject enemy = Instantiate(group.enemyPrefab);
-                        enemy.name = key; // nazwa prefab-u (bez "(Clone)")
-                        enemy.SetActive(false);
-                        newPool.Enqueue(enemy);
-                    }
-
-                    enemyPools[key] = newPool;
-                }
-            }
-        }
-
+        InitializeEnemyPools();
         StartCoroutine(BeginNextWave());
     }
 
-    private void Update()
+    private void InitializeEnemyPools()
     {
-        if (waveInProgress)
-        {
-            spawnTimer += Time.deltaTime;
-
-            if (spawnTimer >= waves[currentWaveIndex].spawnTime)
+        foreach (var wave in waves)
+            foreach (var group in wave.enemyGroups)
             {
-                spawnTimer = 0f;
-                SpawnEnemyFromWave();
+                if (enemyPools.ContainsKey(group.enemyName)) continue;
+
+                enemyPools[group.enemyName] = CreatePool(group.enemyPrefab, group.enemyName);
             }
-        }
-        else if (currentWaveIndex < waves.Count)
-        {
-            StartCoroutine(BeginNextWave());
-        }
     }
+
+    private Queue<GameObject> CreatePool(GameObject prefab, string name)
+    {
+        var pool = new Queue<GameObject>();
+        for (int i = 0; i < poolSize; i++)
+        {
+            var enemy = Instantiate(prefab);
+            enemy.name = name;
+            enemy.SetActive(false);
+            pool.Enqueue(enemy);
+        }
+        return pool;
+    }
+
 
     IEnumerator BeginNextWave()
     {
-        waveInProgress = true;
-        yield return new WaitForSeconds(waveTime);
+        yield return new WaitForSeconds(timeBetweenWaves);
 
-        CalculateWaveQuota(waves[currentWaveIndex]);
-        spawnTimer = 0f;
+        if (currentWaveIndex >= waves.Count)
+        {
+            Debug.Log("All waves completed!");
+            yield break;
+        }
 
-        Debug.Log($"Wave {waves[currentWaveIndex].waveName} started!");
+        var wave = waves[currentWaveIndex];
+        PrepareWave(wave);
+        Debug.Log($"Wave {wave.waveName} started!");
+
+        yield return StartCoroutine(RunWave(wave));
     }
 
-    void CalculateWaveQuota(Wave wave)
+    IEnumerator RunWave(Wave wave)
+    {
+        while (wave.spawnedCount < wave.waveQuota)
+        {
+            SpawnEnemyFromWave();
+            yield return new WaitForSeconds(wave.spawnTime);
+        }
+
+        currentWaveIndex++;
+        StartCoroutine(BeginNextWave());
+    }
+
+    void PrepareWave(Wave wave)    // wczeœniej jako CalculateWaveQuota()
     {
         wave.waveQuota = 0;
         wave.spawnedCount = 0;
@@ -122,52 +128,37 @@ public class EnemySpawner : MonoBehaviour
 
     public void SpawnEnemyFromWave()
     {
-        Wave currentWave = waves[currentWaveIndex];
+        var wave = waves[currentWaveIndex];
 
-        if (currentWave.spawnedCount >= currentWave.waveQuota)
+        foreach (var group in wave.enemyGroups)
         {
-            waveInProgress = false;
-            currentWaveIndex++;
-            return;
-        }
+            if (group.spawnedCount >= group.enemyCount) continue;
+            if (!enemyPools.TryGetValue(group.enemyName, out var pool) || pool.Count == 0) continue;
 
-        foreach (var group in currentWave.enemyGroups)
-        {
-            if (group.spawnedCount < group.enemyCount &&
-                enemyPools.ContainsKey(group.enemyName) &&
-                enemyPools[group.enemyName].Count > 0)
-            {
-                GameObject enemy = enemyPools[group.enemyName].Dequeue();
-                Vector3 spawnPosition = GetSpawnPosition();
+            var enemy = pool.Dequeue();
+            Vector3 spawnPos = GetSpawnPosition();
 
-                enemy.SetActive(true);
-                enemy.transform.position = spawnPosition;
+            enemy.transform.position = spawnPos;
+            enemy.SetActive(true);
 
-                NavMeshAgent agent = enemy.GetComponent<NavMeshAgent>();
-                if (agent != null)
-                {
-                    agent.Warp(spawnPosition);
-                }
+            enemy.GetComponent<NavMeshAgent>()?.Warp(spawnPos);
 
-                group.spawnedCount++;
-                currentWave.spawnedCount++;
-                break; // tylko jeden wróg na raz
-            }
+            group.spawnedCount++;
+            wave.spawnedCount++;
+            break;
         }
     }
 
-    public void ReturnEnemy(GameObject enemy)
+    public void ReturnEnemy(GameObject enemy)    // to jest do object poolingu, gdy enemy umrze, dlatego teraz jest 0 odwo³añ
     {
         enemy.SetActive(false);
-        string key = enemy.name.Trim(); // nazwa prefab-u (bez "(Clone)")
-
-        if (enemyPools.ContainsKey(key))
+        if (enemyPools.TryGetValue(enemy.name.Trim(), out var pool))
         {
-            enemyPools[key].Enqueue(enemy);
+            pool.Enqueue(enemy);
         }
         else
         {
-            Debug.LogWarning($"No pool found for: {key}");
+            Debug.LogWarning($"No pool found for: {enemy.name}");
         }
     }
 
@@ -175,19 +166,15 @@ public class EnemySpawner : MonoBehaviour
     {
         for (int i = 0; i < 10; i++)
         {
-            Vector2 randomCircle = Random.insideUnitCircle.normalized * spawnRadius;
-            Vector3 randomPosition = new Vector3(
-                player.position.x + randomCircle.x,
-                player.position.y,
-                player.position.z + randomCircle.y
-            );
+            Vector2 offset = Random.insideUnitCircle.normalized * spawnRadius;
+            Vector3 targetPos = player.position + new Vector3(offset.x, 0, offset.y);
 
-            if (NavMesh.SamplePosition(randomPosition, out NavMeshHit hit, 2f, NavMesh.AllAreas))
-            {
+            if (NavMesh.SamplePosition(targetPos, out NavMeshHit hit, 2f, NavMesh.AllAreas))
                 return hit.position;
-            }
         }
 
         return player.position;
     }
+
+
 }

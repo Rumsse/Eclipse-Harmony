@@ -1848,26 +1848,26 @@ MonoBehaviour:
     enemyGroups:
     - enemyName: red enemy
       enemyPrefab: {fileID: 1432766818}
-      enemyCount: 3
+      enemyCount: 200
       spawnedCount: 0
-    waveQuota: 3
-    spawnTime: 1
+    waveQuota: 200
+    spawnTime: 0.05
     spawnedCount: 0
   - waveName: wave 2
     enemyGroups:
     - enemyName: orange enemy
       enemyPrefab: {fileID: 1442101880}
-      enemyCount: 2
+      enemyCount: 200
       spawnedCount: 0
     - enemyName: yellow enemy
       enemyPrefab: {fileID: 1033818077}
-      enemyCount: 5
+      enemyCount: 200
       spawnedCount: 0
-    waveQuota: 7
-    spawnTime: 0.5
+    waveQuota: 400
+    spawnTime: 0.05
     spawnedCount: 0
-  waveTime: 5
-  poolSize: 10
+  timeBetweenWaves: 1
+  poolSize: 200
   player: {fileID: 1321265318}
   spawnRadius: 10
   enemyScript: {fileID: 1432766825}
