@@ -7,7 +7,7 @@ public class Enemy : MonoBehaviour
     public EnemyScriptableObject stats;
     public NavMeshAgent agent;
     public Transform target;
-    public string targetTag = "Player1";
+    public string targetTag;
 
 
     void Start()
