@@ -1,25 +1,23 @@
 using UnityEngine;
 using UnityEngine.Animations;
+using UnityEngine.AI;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] private Rigidbody rb;
-    [SerializeField] private float speed = 5;
+    [SerializeField] private NavMeshAgent agent;
     [SerializeField] private float turnSpeed = 360;
 
     [SerializeField] private string horizontalInput = "Horizontal";
     [SerializeField] private string verticalInput = "Vertical";
     private Vector3 input;
 
-    void Update()
-    {
-        GatherInput();
-        Look();
-    }
+    
 
     void FixedUpdate()
     {
+        GatherInput();
         Move();
+        Look();
     }
 
     void GatherInput()
@@ -31,16 +29,21 @@ public class PlayerMovement : MonoBehaviour
     {
         if (input != Vector3.zero)
         {
-            var relative = (transform.position + input.ToIso()) - transform.position;
-            var rot = Quaternion.LookRotation(relative, Vector3.up);
-
+            var isoDirection = input.ToIso().normalized;
+            var rot = Quaternion.LookRotation(isoDirection, Vector3.up);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, rot, turnSpeed * Time.deltaTime);
         }
     }
 
     void Move()
     {
-        rb.MovePosition(transform.position + (transform.forward * input.magnitude) * speed * Time.deltaTime);
+        if (input != Vector3.zero)
+        {
+            Vector3 isoInput = input.ToIso().normalized;
+            Vector3 targetPosition = transform.position + isoInput;
+
+            agent.SetDestination(targetPosition);
+        }
     }
 
 }
