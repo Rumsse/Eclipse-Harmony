@@ -6,6 +6,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Rigidbody rb;
     [SerializeField] private float speed = 5;
     [SerializeField] private float turnSpeed = 360;
+
+    [SerializeField] private string horizontalInput = "Horizontal";
+    [SerializeField] private string verticalInput = "Vertical";
     private Vector3 input;
 
     void Update()
@@ -21,7 +24,7 @@ public class PlayerMovement : MonoBehaviour
 
     void GatherInput()
     {
-        input = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
+        input = new Vector3(Input.GetAxisRaw(horizontalInput), 0, Input.GetAxisRaw(verticalInput));
     }
 
     void Look()

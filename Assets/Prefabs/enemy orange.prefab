@@ -175,4 +175,4 @@ MonoBehaviour:
   stats: {fileID: 11400000, guid: 1e2da6bae933063428da5a0266963abe, type: 2}
   agent: {fileID: 385174721263888009}
   target: {fileID: 0}
-  targetTag: Player1
+  targetTag: Player2
