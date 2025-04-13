@@ -97,13 +97,13 @@ public class WaveManager : MonoBehaviour
 
         var boss = pool.Dequeue();
         boss.transform.position = enemySpawner.GetSpawnPosition();
-        boss.SetActive(true);
+        boss.gameObject.SetActive(true);
 
         group.spawnedCount++;
         wave.spawnedCount++;
 
         // Czekaj a¿ boss padnie (mo¿esz to obs³u¿yæ np. przez event)
-        while (boss.activeSelf)
+        while (boss.gameObject.activeSelf)
             yield return null;
 
         Debug.Log("[BOSS] Defeated!");
@@ -127,7 +127,7 @@ public class WaveManager : MonoBehaviour
         {
             foreach (var enemy in pool)
             {
-                if (enemy.activeSelf)
+                if (enemy.gameObject.activeSelf)
                     return true;
             }
         }
