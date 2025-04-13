@@ -4,7 +4,7 @@ using UnityEngine.AI;
 
 public class Enemy : MonoBehaviour
 {
-    public EnemyScriptableObject stats;
+    public EnemyStats stats;
     public NavMeshAgent agent;
     public Transform target;
     public string targetTag;
