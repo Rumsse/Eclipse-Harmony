@@ -1,25 +1,44 @@
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
-public class Flute : WeaponController
+public class Flute : MonoBehaviour
 {
-    protected override void Start()
+    [SerializeField] private WeaponStats stats;
+    [SerializeField] private Projectile projectile;
+    public Transform fireStartpoint;
+
+    public void Fire()
     {
-        base.Start();
+        fireStartpoint = GameObject.FindWithTag("Player1").transform;
+        GameObject target = FindClosesEnemy(stats.range); 
+        if (target == null) return;
+
+        Vector3 direction = (target.transform.position - fireStartpoint.position).normalized;
+
+        Instantiate(stats.prefab, fireStartpoint.position, Quaternion.identity);  //zamieniæ gameobject na var 
+        projectile.rb.linearVelocity = direction * stats.speed * Time.deltaTime;
+    } 
+
+    GameObject FindClosesEnemy(float range)
+    {
+        Collider[] hits = Physics.OverlapSphere(transform.position, range, LayerMask.GetMask("Enemy"));
+        float closestDistance = Mathf.Infinity;
+        GameObject closest = null;
+
+        foreach (var hit in hits)
+        {
+            float dist = Vector3.Distance(transform.position, hit.transform.position);
+            if (dist < closestDistance)
+            {
+                closest = hit.gameObject;
+                closestDistance = dist;
+            }
+        }
+
+        Debug.Log("just debug");
+        return closest; 
+
     }
 
-    protected override void Attack()
-    {
-        //base.Attack();
-        //GameObject spawnedNote = Instantiate(prefab);
-        //spawnedNote.transform.position = transform.position;
-    }
-
-    /*Enemy FindClosestEnemy()
-    {
-
-    }*/
-
-    
 }

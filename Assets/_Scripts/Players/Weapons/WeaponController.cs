@@ -1,26 +1,17 @@
 using Unity.VisualScripting;
 using UnityEngine;
 
-public abstract class WeaponController : MonoBehaviour
+public class WeaponController : MonoBehaviour
 {
     [SerializeField] WeaponStats stats;
-    protected float currentCooldown;
+    [SerializeField] Flute flute;
 
-    protected virtual void Start()
+    private void Update()
     {
-        currentCooldown = stats.cooldownDuration;
-    }
-
-    protected virtual void Update()
-    {
-        currentCooldown -= Time.deltaTime;
-        if(currentCooldown <= 0f)
+        if(Input.GetKeyDown(KeyCode.I))
         {
-            Attack();
-            currentCooldown = stats.cooldownDuration;
+            flute.Fire();
+            Debug.Log("fire");
         }
     }
-
-    protected abstract void Attack();
-    
 }
