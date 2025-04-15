@@ -1,26 +1,46 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Projectile : MonoBehaviour
 {
-    [SerializeField] private WeaponStats stats;
-    public Rigidbody rb;
     private Vector3 direction;
-    private bool hasHit = false;
+    private float speed;
+    private GameObject target;
+
+    private Queue<GameObject> pool;
 
 
-    void Update()
+    public void Initialize(Vector3 dir, float spd)
     {
-        transform.position += direction * stats.speed * Time.deltaTime;
+        direction = dir;
+        speed = spd;
+    }
+
+    private void Update()
+    {
+        transform.position += direction * speed * Time.deltaTime;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (hasHit) return;
-
         if (other.CompareTag("Enemy"))
         {
-            hasHit = true;
-            Debug.Log($"{gameObject.name} has taken damage.");
+            Debug.Log("Projectile hit enemy: " + other.name);
+            //dodaæ dmg, health etc
+            gameObject.SetActive(false);
+            pool.Enqueue(gameObject);
         }
     }
+
+    public void SetPool(Queue<GameObject> poolReference)
+    {
+        pool = poolReference;
+    }
+
+    private void OnDisable()
+    {
+        direction = Vector3.zero;
+        speed = 0f;
+    }
+
 }

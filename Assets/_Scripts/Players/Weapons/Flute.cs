@@ -1,28 +1,57 @@
-using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class Flute : MonoBehaviour
 {
     [SerializeField] private WeaponStats stats;
-    [SerializeField] private Projectile projectile;
     public Transform fireStartpoint;
+    [SerializeField] private LayerMask enemyLayer;
+
+    [Header("Pooling")]
+    private Queue<GameObject> projectilePool = new Queue<GameObject>();
+    [SerializeField] private int poolSize = 3;
+
+
+
+    private void Awake()
+    {
+        for (int i = 0; i < poolSize; i++)
+        {
+            GameObject proj = Instantiate(stats.prefab);
+            proj.SetActive(false);
+
+            if (proj.TryGetComponent(out Projectile projectile))
+            {
+                projectile.SetPool(projectilePool);
+            }
+
+            projectilePool.Enqueue(proj);
+        }
+    }
+
 
     public void Fire()
     {
-        fireStartpoint = GameObject.FindWithTag("Player1").transform;
-        GameObject target = FindClosesEnemy(stats.range); 
+        GameObject target = FindClosesEnemy(stats.range);
         if (target == null) return;
 
         Vector3 direction = (target.transform.position - fireStartpoint.position).normalized;
 
-        Instantiate(stats.prefab, fireStartpoint.position, Quaternion.identity);  //zamieniæ gameobject na var 
-        projectile.rb.linearVelocity = direction * stats.speed * Time.deltaTime;
-    } 
+        GameObject projectile = GetProjectileFromPool();
+        projectile.transform.position = fireStartpoint.position;
+        projectile.transform.rotation = Quaternion.LookRotation(direction);
+        
+        if (projectile.TryGetComponent(out Projectile p))
+        {
+            p.Initialize(direction, stats.speed);
+        }
+
+        projectile.SetActive(true);
+    }
 
     GameObject FindClosesEnemy(float range)
     {
-        Collider[] hits = Physics.OverlapSphere(transform.position, range, LayerMask.GetMask("Enemy"));
+        Collider[] hits = Physics.OverlapSphere(transform.position, range, enemyLayer);
         float closestDistance = Mathf.Infinity;
         GameObject closest = null;
 
@@ -36,9 +65,22 @@ public class Flute : MonoBehaviour
             }
         }
 
-        Debug.Log("just debug");
-        return closest; 
+        return closest;
+    }
 
+    private GameObject GetProjectileFromPool()
+    {
+        if (projectilePool.Count > 0)
+        {
+            return projectilePool.Dequeue();
+        }
+
+        GameObject proj = Instantiate(stats.prefab);
+        if (proj.TryGetComponent(out Projectile p))
+        {
+            p.SetPool(projectilePool);
+        }
+        return proj;
     }
 
 }

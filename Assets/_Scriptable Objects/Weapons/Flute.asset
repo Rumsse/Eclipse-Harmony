@@ -16,7 +16,6 @@ MonoBehaviour:
   prefab: {fileID: 6149493370093446995, guid: af327c453d3901148b8855beb6c3ba43, type: 3}
   damage: 20
   cooldown: 2
-  speed: 5
+  speed: 8
   fireRate: 1
-  range: 5
-  rb: {fileID: 3488665122913289127, guid: af327c453d3901148b8855beb6c3ba43, type: 3}
+  range: 10
